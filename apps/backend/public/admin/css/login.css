@@ -1,0 +1,151 @@
+ html {
+    /* background: url("../img/login.jpg") center top no-repeat fixed; */
+}
+html body{
+    background-color: rgba(0,0,0,0);
+}
+.page{
+    background-color: rgba(0,0,0,0);
+}
+#root{
+    background-color: rgba(0,0,0,0);
+    max-width: 1140px;
+    padding: 0 20px;
+    margin: 0 auto;
+}
+.firm_title{
+    text-align: center;
+    font-size:  20pt;
+    margin: 60px 0;
+}
+.container{
+    min-width: 1140px;
+    margin: 30px auto;
+    border: 1px solid #e5e9ed;
+    background: #ffffff9c;
+    padding: 35px 40px;
+    border-radius: 3px;
+}
+.login_box{
+    background-color: #d0d3d1c4;
+    padding: 35px 40px;
+    border-radius: 3px;
+    width: 390px;
+    margin: 0 auto;
+}
+.message_box{
+    background-color: #ffffff9c;
+    border-radius: 3px;
+    width: 440px;
+    margin: 20px auto;
+}
+.message_form{
+    margin: 10px auto;
+}
+.item{
+    text-align:  center;
+    font-size: 23px;
+}
+.input_item{
+    margin: 41px 0;
+    display:  flex;
+}
+.input_message input{
+    display:  flex;
+    height: 38px;
+    border: 1px solid #e5e9ed;
+    box-shadow: none;
+    width: 100%;
+    line-height: 60px;
+    padding: 0 5px;
+    font-size: 18px;
+}
+.input_message textarea{
+    margin: 5px 0 32px 0;
+    display:  flex;
+    height: 98px;
+    border: 1px solid #e5e9ed;
+    box-shadow: none;
+    width: 100%;
+    /* line-height: 60px; */
+    padding: 0 5px;
+    font-size: 18px;
+}
+.message_name{
+    font-size: 20px;
+    padding: 0 0 0 3px;
+    margin: 11px 0 0 0;
+}
+.message_name p{
+     font-weight: 700;
+     margin:  0;
+}
+.input_box{
+    margin: 50px 0;
+}
+.input_item img{
+    width: 42px;
+    position:  relative;
+    top: 2px;
+    height: 36px;
+    left: 5px;
+}
+.input_item input{
+    height: 38px;
+    border: 1px solid #e5e9ed;
+    box-shadow: none;
+    width: 87%;
+    line-height: 60px;
+    padding: 0 17px;
+    font-size: 18px;
+}
+.input_item+.radio input{
+    width: 17px;
+}
+.radio_item{
+    display: inline-block;
+    margin: 10px 10px;
+}
+.radio_item span{
+    margin: 10px 10px;
+    font-size: 11pt;
+    position: relative;
+    top: 2px;
+}
+.button{
+    height: 40px;
+    min-width: 70px;
+    border-radius: 4px;
+}
+
+.the_icon{
+    width: 13%;
+    background-color: #f1f4f9;
+    display:  inline-block;
+}
+.attention{
+    margin: 33px 9px;
+    font-size: 16px;
+    color: #c32222;
+}
+.btn_item{
+    display: flex;
+    justify-content: space-around;
+}
+.message_btn{
+    margin: 70px 0 0 0;
+}
+.message_icon{
+    padding: 10px 0 0 10px;
+}
+.cancel{
+    display: block;
+}
+.body_container{
+    width: 500px;
+    /* background-color: #8aff539c; */
+    margin: 120px auto;
+    /* padding: 20px 60px; */
+}
+
+

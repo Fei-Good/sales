@@ -1,0 +1,7 @@
+*{
+    margin:0;
+    padding:0;
+}
+.page_break{
+    page-break-after:always;
+}
