@@ -6,8 +6,10 @@
   ],
   "scripts": {
     "dev": "npm run -w apps/backend start & npm run -w apps/frontend start",
-    "build": "npm run -w apps/frontend build",
+    "dev:nest": "npm run -w apps/backend-nest start:dev",
+    "build": "npm run -w apps/frontend build && npm run -w apps/backend-nest build",
+    "build:nest": "npm run -w apps/backend-nest build",
     "test": "npm run -w apps/backend test && npm run -w apps/frontend test -- --watchAll=false",
-    "lint": "npm run -w apps/backend lint && npm run -w apps/frontend lint"
+    "lint": "npm run -w apps/backend lint && npm run -w apps/frontend lint && npm run -w apps/backend-nest lint"
   }
 }
