@@ -1,13 +1,25 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ObjectId } from 'mongodb';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
-export class PriceService {
+export class PriceService implements OnModuleInit {
   constructor(private db: DatabaseService) {}
 
   private get col() {
     return this.db.collection('price');
+  }
+
+  async onModuleInit() {
+    const count = await this.col.countDocuments();
+    if (count === 0) {
+      await this.col.insertOne({
+        adultPrice: 78,
+        childPrice: 60,
+        plupPrice: 30,
+        clothPrice: 50,
+      });
+    }
   }
 
   async findAll() {

@@ -25,21 +25,22 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center mt-32">
-      <div className="w-[400px] bg-gray-200/80 p-10 rounded">
-        <h2 className="text-center text-2xl mb-2">管理员后台管理系统</h2>
-        <p className="text-center text-xl mb-6">登录</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700">
+      <div className="w-[420px] bg-white/95 backdrop-blur-sm p-10 rounded-2xl shadow-2xl">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <span className="text-white text-2xl font-bold">PL</span>
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-800">漂流售票后台管理系统</h2>
+          <p className="text-gray-400 mt-1">请登录您的账号</p>
+        </div>
         <Spin spinning={loading}>
-          <Form
-            name="login"
-            initialValues={{ powerId: '1' }}
-            onFinish={onFinish}
-          >
+          <Form name="login" initialValues={{ powerId: '1' }} onFinish={onFinish} size="large">
             <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
-              <Input prefix={<UserOutlined />} placeholder="用户名" />
+              <Input prefix={<UserOutlined className="text-gray-400" />} placeholder="用户名" className="rounded-lg" />
             </Form.Item>
             <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
-              <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+              <Input.Password prefix={<LockOutlined className="text-gray-400" />} placeholder="密码" className="rounded-lg" />
             </Form.Item>
             <Form.Item name="powerId">
               <Radio.Group>
@@ -48,8 +49,8 @@ export default function Login() {
               </Radio.Group>
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit" block>
-                登录
+              <Button type="primary" htmlType="submit" block className="h-11 rounded-lg text-base font-medium bg-gradient-to-r from-blue-500 to-indigo-600 border-none shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50">
+                登 录
               </Button>
             </Form.Item>
           </Form>

@@ -51,14 +51,14 @@ export default function UserManagement() {
   ];
 
   return (
-    <div>
-      <h4 className="text-xl font-medium mb-4">-用户管理</h4>
-      <Table columns={columns} dataSource={users} rowKey="_id" pagination={{ pageSize: 6 }} />
-      <div className="text-right mt-2">
-        <Button type="primary" onClick={() => { setForm({ _id: '', username: '', password: '', orders: 0, powerId: '1' }); setErrMsg(''); setModalOpen(true); }}>
-          新建
+    <div className="pt-4">
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-gray-500 text-sm">共 {users.length} 个用户</span>
+        <Button type="primary" size="small" onClick={() => { setForm({ _id: '', username: '', password: '', orders: 0, powerId: '1' }); setErrMsg(''); setModalOpen(true); }} className="rounded-lg">
+          新建用户
         </Button>
       </div>
+      <Table columns={columns} dataSource={users} rowKey="_id" pagination={{ pageSize: 6 }} size="middle" />
 
       <Modal title="用户" open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} maskClosable={false}>
         <div className="space-y-4 my-4">

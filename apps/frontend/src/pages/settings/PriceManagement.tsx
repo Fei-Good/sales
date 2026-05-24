@@ -70,9 +70,8 @@ export default function PriceManagement() {
   ];
 
   return (
-    <div>
-      <h4 className="text-xl font-medium mb-4">-价格设置</h4>
-      <Table columns={columns} dataSource={rows} rowKey="key" pagination={{ pageSize: 6 }} />
+    <div className="pt-4">
+      <Table columns={columns} dataSource={rows} rowKey="key" pagination={{ pageSize: 6 }} size="middle" />
 
       <Modal title="修改价格" open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} maskClosable={false}>
         <div className="space-y-4 my-4">

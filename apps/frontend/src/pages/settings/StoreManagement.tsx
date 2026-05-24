@@ -76,12 +76,14 @@ export default function StoreManagement() {
   ];
 
   return (
-    <div>
-      <h4 className="text-xl font-medium mb-4">-小卖部</h4>
-      <Table columns={columns} dataSource={items} rowKey="_id" pagination={{ pageSize: 6 }} />
-      <div className="text-right mt-2">
-        <Button type="primary" onClick={() => { setForm({ _id: '', name: '', total: 0 }); setErrMsg(''); setModalOpen(true); }}>新建</Button>
+    <div className="pt-4">
+      <div className="flex justify-between items-center mb-4">
+        <span className="text-gray-500 text-sm">共 {items.length} 种物品</span>
+        <Button type="primary" size="small" onClick={() => { setForm({ _id: '', name: '', total: 0 }); setErrMsg(''); setModalOpen(true); }} className="rounded-lg">
+          新建物品
+        </Button>
       </div>
+      <Table columns={columns} dataSource={items} rowKey="_id" pagination={{ pageSize: 6 }} size="middle" />
 
       <Modal title="新建物品" open={modalOpen} onOk={handleCreate} onCancel={() => setModalOpen(false)} maskClosable={false}>
         <div className="space-y-4 my-4">

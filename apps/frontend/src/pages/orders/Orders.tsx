@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Table, Button, Input, Select, DatePicker, Modal, InputNumber, message } from 'antd';
+import { useOutletContext } from 'react-router-dom';
+import { Table, Button, Input, Select, DatePicker, Modal, InputNumber, message, Card } from 'antd';
+import { PlusOutlined, TeamOutlined, ManOutlined, SmileOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -34,7 +35,6 @@ const defaultOrder = (): Partial<Order> => ({
 
 export default function Orders() {
   const { user } = useOutletContext<{ user: UserMessage }>();
-  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [price, setPrice] = useState<Price>({ _id: '', adultPrice: 80, childPrice: 40, plupPrice: 50, clothPrice: 30 });
   const [saler, setSaler] = useState('');
@@ -160,117 +160,128 @@ export default function Orders() {
   const resetFilters = () => { setFilterPlat('各平台'); setFilterTime(null); setSearchNum(''); };
 
   return (
-    <div>
-      <h4 className="text-xl font-medium mb-4">-订单状态</h4>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold text-gray-800">订单管理</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleNew} className="rounded-lg h-9 bg-gradient-to-r from-blue-500 to-indigo-600 border-none shadow-md shadow-blue-500/20">
+          新建订单
+        </Button>
+      </div>
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <span>选择时间：</span>
-          <RangePicker
-            format="YYYY-MM-DD"
-            value={filterTime}
-            onChange={(dates) => setFilterTime(dates as [Dayjs, Dayjs] | null)}
-            placeholder={['开始时间', '结束时间']}
-          />
-          <span>选择平台：</span>
-          <Select value={filterPlat} onChange={setFilterPlat} style={{ width: 120 }}>
-            {PLATFORMS.map((p) => <Select.Option key={p} value={p}>{p}</Select.Option>)}
-          </Select>
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="rounded-xl border-0 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center"><TeamOutlined className="text-blue-500 text-lg" /></div>
+            <div><p className="text-xs text-gray-400">总人数</p><p className="text-xl font-semibold text-gray-800">{totalPeople}</p></div>
+          </div>
+        </Card>
+        <Card className="rounded-xl border-0 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center"><ManOutlined className="text-green-500 text-lg" /></div>
+            <div><p className="text-xs text-gray-400">成人</p><p className="text-xl font-semibold text-gray-800">{totalAdult}</p></div>
+          </div>
+        </Card>
+        <Card className="rounded-xl border-0 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center"><SmileOutlined className="text-orange-500 text-lg" /></div>
+            <div><p className="text-xs text-gray-400">儿童</p><p className="text-xl font-semibold text-gray-800">{totalChild}</p></div>
+          </div>
+        </Card>
+      </div>
+
+      <Card className="rounded-xl border-0 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-3">
+            <RangePicker
+              format="YYYY-MM-DD"
+              value={filterTime}
+              onChange={(dates) => setFilterTime(dates as [Dayjs, Dayjs] | null)}
+              placeholder={['开始时间', '结束时间']}
+              className="rounded-lg"
+            />
+            <Select value={filterPlat} onChange={setFilterPlat} style={{ width: 120 }} className="rounded-lg">
+              {PLATFORMS.map((p) => <Select.Option key={p} value={p}>{p}</Select.Option>)}
+            </Select>
+            <Button onClick={resetFilters} className="rounded-lg">重置</Button>
+          </div>
+          <Input.Search placeholder="输入编号查询" onSearch={setSearchNum} enterButton style={{ width: 220 }} className="rounded-lg" />
         </div>
-        <Input.Search
-          placeholder="请输入编号查询"
-          onSearch={setSearchNum}
-          enterButton
-          style={{ width: 200 }}
+
+        <Table
+          columns={columns}
+          dataSource={filtered}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+          size="middle"
         />
-      </div>
+      </Card>
 
-      <Table
-        bordered
-        columns={columns}
-        dataSource={filtered}
-        rowKey="_id"
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-      />
-
-      <div className="flex justify-between items-center mt-4">
-        <span className="text-lg">
-          共{filtered.length}条记录，共{totalPeople}人，成人{totalAdult}人，儿童{totalChild}人。
-        </span>
-        <div className="flex gap-2">
-          <Button onClick={resetFilters}>默认</Button>
-          <Button type="primary" onClick={handleNew}>新建</Button>
-          {user.powerId === '2' && <Button type="primary" onClick={() => navigate('/settings')}>设置</Button>}
-        </div>
-      </div>
-
-      {/* New/Edit Order Modal */}
       <Modal
         title="新建订单"
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
-        width={420}
+        width={460}
         maskClosable={false}
+        className="rounded-xl"
       >
-        <div className="space-y-4">
+        <div className="space-y-4 py-2">
           <div className="flex justify-between items-center">
-            <span>购票平台：</span>
+            <span className="text-gray-500">购票平台</span>
             {PLATFORM_OPTIONS.includes(form.platform || '') ? (
-              <Select value={form.platform} onChange={(v) => updateForm('platform', v)} style={{ width: 160 }}>
+              <Select value={form.platform} onChange={(v) => updateForm('platform', v)} style={{ width: 180 }}>
                 {PLATFORM_OPTIONS.map((p) => <Select.Option key={p} value={p}>{p}</Select.Option>)}
               </Select>
             ) : (
-              <Input value={form.platform} onChange={(e) => updateForm('platform', e.target.value)} style={{ width: 160 }} />
+              <Input value={form.platform} onChange={(e) => updateForm('platform', e.target.value)} style={{ width: 180 }} />
             )}
           </div>
           <div className="flex justify-between items-center">
-            <span>付款方式：</span>
-            <Select value={form.payWay} onChange={(v) => updateForm('payWay', v)} style={{ width: 160 }}>
+            <span className="text-gray-500">付款方式</span>
+            <Select value={form.payWay} onChange={(v) => updateForm('payWay', v)} style={{ width: 180 }}>
               {PAY_WAYS.map((p) => <Select.Option key={p} value={p}>{p}</Select.Option>)}
             </Select>
           </div>
           <div className="flex justify-between items-center">
-            <span>成人人数：</span>
+            <span className="text-gray-500">成人人数</span>
             <div className="flex items-center gap-2">
               <InputNumber min={0} value={form.adultNum} onChange={(v) => updateForm('adultNum', v || 0)} />
-              <span>{price.adultPrice}元/人</span>
+              <span className="text-xs text-gray-400">{price.adultPrice}元/人</span>
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <span>儿童人数：</span>
+            <span className="text-gray-500">儿童人数</span>
             <div className="flex items-center gap-2">
               <InputNumber min={0} value={form.childNum} onChange={(v) => updateForm('childNum', v || 0)} />
-              <span>{price.childPrice}元/人</span>
+              <span className="text-xs text-gray-400">{price.childPrice}元/人</span>
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <span>人身意外：</span>
+            <span className="text-gray-500">人身意外</span>
             <div className="flex items-center gap-2">
               <InputNumber min={0} value={form.accidentNum} onChange={(v) => updateForm('accidentNum', v || 0)} />
-              <span>7元/人</span>
+              <span className="text-xs text-gray-400">7元/人</span>
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <span>押金：</span><span>100元</span>
+            <span className="text-gray-500">押金</span><span className="font-medium">100元</span>
           </div>
           <div className="flex justify-between items-center">
-            <span>联系方式：</span>
+            <span className="text-gray-500">联系方式</span>
             <Input
               value={form.phoneNumber}
               onChange={(e) => { if (!/\D/.test(e.target.value)) updateForm('phoneNumber', e.target.value); }}
-              style={{ width: 160 }}
+              style={{ width: 180 }}
             />
           </div>
-          <div className="flex justify-between items-center">
-            <span>总价：</span>
-            <span>{form.platform !== '现场' ? form.deposite : form.totalMoney}元</span>
+          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+            <span className="text-gray-700 font-medium">总价</span>
+            <span className="text-xl font-semibold text-blue-600">{form.platform !== '现场' ? form.deposite : form.totalMoney}元</span>
           </div>
         </div>
       </Modal>
 
-      {/* Delete Confirm */}
       <Modal
         title="确认删除"
         open={deleteOpen}
@@ -278,11 +289,11 @@ export default function Orders() {
         onCancel={() => setDeleteOpen(false)}
         okText="确认"
         cancelText="取消"
+        okButtonProps={{ danger: true }}
       >
-        <p>将永久删除这一条订单？</p>
+        <p className="text-gray-600">将永久删除这一条订单，此操作不可撤销。</p>
       </Modal>
 
-      {/* Hidden printer form */}
       <Printer data={printData} price={price} />
     </div>
   );
