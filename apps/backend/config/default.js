@@ -1,5 +1,5 @@
 module.exports = {
-    port: Number(process.env.PORT) || 80,
+    port: Number(process.env.PORT) || 7003,
     session: {
         secret: process.env.SESSION_SECRET || 'dev-only-change-session-secret',
         key: process.env.SESSION_KEY || 'tiger',

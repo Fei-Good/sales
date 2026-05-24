@@ -1,45 +1,33 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
+  "name": "sales-frontend",
   "private": true,
-  "dependencies": {
-    "@babel/plugin-proposal-decorators": "^7.3.0",
-    "antd": "^3.13.6",
-    "axios": "^0.18.0",
-    "babel-plugin-import": "^1.11.0",
-    "escpos": "^2.4.11",
-    "hermes-react": "^1.8.1",
-    "mobx": "^5.9.0",
-    "mobx-react": "^5.4.3",
-    "mobx-utils": "^5.4.0",
-    "react": "^16.7.0",
-    "react-app-rewire-mobx": "^1.0.9",
-    "react-app-rewired": "^2.1.0",
-    "react-dom": "^16.7.0",
-    "react-router": "^3.2.1",
-    "react-router-dom": "^4.3.1",
-    "react-scripts": "2.1.3",
-    "react-transition-group": "^2.5.3"
-  },
+  "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "start": "react-app-rewired start",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider react-app-rewired build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "vite",
+    "start": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
   },
-
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not dead",
-    "not op_mini all"
-  ],
+  "dependencies": {
+    "antd": "^5.22.0",
+    "@ant-design/icons": "^5.5.0",
+    "axios": "^1.7.0",
+    "dayjs": "^1.11.13",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0"
+  },
   "devDependencies": {
-    "babel-plugin-transform-decorators": "^6.24.1",
-    "babel-preset-mobx": "^2.0.0",
-    "customize-cra": "^0.2.11",
-    "jquery": "^3.3.1"
-  },
-  "proxy": "http://localhost:7003"
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "sass": "^1.80.0",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0"
+  }
 }
