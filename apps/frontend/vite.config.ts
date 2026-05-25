@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/admin': {
-        target: 'http://localhost:7003',
+        target: 'http://localhost:3100',
         changeOrigin: true,
       },
     },

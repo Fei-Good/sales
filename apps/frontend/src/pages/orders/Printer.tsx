@@ -7,8 +7,7 @@ interface Props {
 
 export default function Printer({ data, price }: Props) {
   if (!data) return null;
-  const time = (data.time || '').split('-');
-  const timeStr = `${time[0] || ''}年${time[1] || ''}月${time[2] || ''}日`;
+  const timeStr = data.printTime || `${(data.time || '').replace(/-/g, '/')}`;
   const personAll = (data.adultNum || 0) + (data.childNum || 0);
   const totalLow = (data.adultNum || 0) * price.adultPrice + (data.childNum || 0) * price.childPrice + (data.accidentNum || 0) * 7;
 
@@ -19,7 +18,7 @@ export default function Printer({ data, price }: Props) {
           <tr>
             <td colSpan={7} style={{ height: 70, border: 'none', textAlign: 'center', fontSize: 20, fontWeight: 500 }}>
               青城两河漂流门票
-              <span style={{ fontSize: 15, position: 'relative', top: 26, left: 50 }}>{timeStr}</span>
+              <span style={{ fontSize: 13, position: 'relative', top: 26, left: 50 }}>{timeStr}</span>
             </td>
           </tr>
           <tr>
@@ -42,7 +41,7 @@ export default function Printer({ data, price }: Props) {
           </tr>
           <tr>
             <td>押金：</td>
-            <td>100元</td>
+            <td>{data.deposite || 0}元</td>
             <td>安全服：</td>
             <td>{personAll}</td>
             <td>浆板：</td>
@@ -56,7 +55,9 @@ export default function Printer({ data, price }: Props) {
           </tr>
           <tr>
             <td>联系方式：</td>
-            <td colSpan={5}>{data.phoneNumber}</td>
+            <td colSpan={3}>{data.phoneNumber}</td>
+            <td>备注：</td>
+            <td>{data.remark || ''}</td>
           </tr>
         </tbody>
       </table>

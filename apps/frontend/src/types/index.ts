@@ -14,6 +14,8 @@ export interface Order {
   ifFinish: string;
   saler: string;
   phoneNumber: string;
+  remark?: string;
+  printTime?: string;
 }
 
 export interface Price {

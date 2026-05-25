@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Table, Button, Input, Select, DatePicker, Modal, InputNumber, message, Card } from 'antd';
-import { PlusOutlined, TeamOutlined, ManOutlined, SmileOutlined } from '@ant-design/icons';
+import { Table, Button, Input, Select, DatePicker, Modal, InputNumber, message, Card, Tooltip, Tag } from 'antd';
+import { PlusOutlined, TeamOutlined, ManOutlined, SmileOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -27,10 +27,11 @@ const defaultOrder = (): Partial<Order> => ({
   accidentNum: 0,
   deposite: 100,
   totalMoney: 100,
-  isReback: 'true',
+  isReback: 'false',
   ifFinish: 'ed',
   phoneNumber: '',
-  time: dayjs().format('YYYY-MM-DD'),
+  remark: '',
+  time: dayjs().format('YYYY-MM-DD HH:mm:ss'),
 });
 
 export default function Orders() {
@@ -40,16 +41,19 @@ export default function Orders() {
   const [saler, setSaler] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Filters
   const [filterPlat, setFilterPlat] = useState('各平台');
   const [filterTime, setFilterTime] = useState<[Dayjs, Dayjs] | null>(null);
   const [searchNum, setSearchNum] = useState('');
+  const [phoneSuffix, setPhoneSuffix] = useState('');
 
-  // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [rebackRecord, setRebackRecord] = useState<Order | null>(null);
   const [form, setForm] = useState<Partial<Order>>(defaultOrder());
   const [printData, setPrintData] = useState<Partial<Order> | null>(null);
+  const [depositPaid, setDepositPaid] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportRange, setExportRange] = useState<[Dayjs, Dayjs] | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -69,6 +73,10 @@ export default function Orders() {
 
   useEffect(() => { load(); }, []);
 
+  const handlePhoneSearch = (value: string) => {
+    setPhoneSuffix(value);
+  };
+
   const filtered = useMemo(() => {
     return orders.filter((item) => {
       if (filterTime) {
@@ -81,9 +89,10 @@ export default function Orders() {
         } else if (item.platform !== filterPlat) return false;
       }
       if (searchNum && item.orderNum !== searchNum) return false;
+      if (phoneSuffix && !(item.phoneNumber || '').endsWith(phoneSuffix)) return false;
       return true;
     });
-  }, [orders, filterPlat, filterTime, searchNum]);
+  }, [orders, filterPlat, filterTime, searchNum, phoneSuffix]);
 
   const totalPeople = useMemo(() => filtered.reduce((s, o) => s + (o.adultNum || 0) + (o.childNum || 0), 0), [filtered]);
   const totalAdult = useMemo(() => filtered.reduce((s, o) => s + (o.adultNum || 0), 0), [filtered]);
@@ -100,10 +109,24 @@ export default function Orders() {
     });
   };
 
+  const checkDepositForPhone = async (phone: string) => {
+    if (phone.length >= 4) {
+      const res = await ordersApi.checkDeposit(phone, dayjs().format('YYYY-MM-DD'));
+      setDepositPaid(res.data);
+      if (res.data) {
+        setForm((prev) => ({ ...prev, deposite: 0, totalMoney: calcTotal({ ...prev, deposite: 0 }) }));
+        message.info('同手机号今日已收押金，本单免押金');
+      }
+    } else {
+      setDepositPaid(false);
+    }
+  };
+
   const handleNew = () => {
     const o = defaultOrder();
     o.saler = saler;
     setForm(o);
+    setDepositPaid(false);
     setModalOpen(true);
   };
 
@@ -112,7 +135,7 @@ export default function Orders() {
       if (!form._id) {
         const res = await ordersApi.create({ ...form, saler });
         setOrders((prev) => [res.data.result, ...prev]);
-        setPrintData({ ...form, saler });
+        setPrintData(res.data.result);
       } else {
         await ordersApi.update(form);
         load();
@@ -136,18 +159,56 @@ export default function Orders() {
     }
   };
 
+  const handleToggleReback = async () => {
+    if (!rebackRecord) return;
+    const newVal = rebackRecord.isReback === 'true' ? 'false' : 'true';
+    try {
+      await ordersApi.update({ _id: rebackRecord._id, isReback: newVal });
+      setOrders((prev) => prev.map((o) => o._id === rebackRecord._id ? { ...o, isReback: newVal } : o));
+      setRebackRecord(null);
+    } catch {
+      message.error('更新失败');
+    }
+  };
+
+  const handleExport = async () => {
+    if (!exportRange) { message.warning('请选择导出时间范围'); return; }
+    const start = exportRange[0].format('YYYY-MM-DD');
+    const end = exportRange[1].format('YYYY-MM-DD');
+    try {
+      const res = await ordersApi.exportCsv(start, end);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders_${start}_${end}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      setExportOpen(false);
+    } catch {
+      message.error('导出失败');
+    }
+  };
+
   const columns: ColumnsType<Order> = [
-    { title: '订单号', dataIndex: 'orderNum', key: 'orderNum' },
-    { title: '平台', dataIndex: 'platform', key: 'platform' },
-    { title: '支付方式', dataIndex: 'payWay', key: 'payWay' },
-    { title: '押金', dataIndex: 'deposite', key: 'deposite' },
-    { title: '成人', dataIndex: 'adultNum', key: 'adultNum' },
-    { title: '儿童', dataIndex: 'childNum', key: 'childNum' },
-    { title: '总价', dataIndex: 'totalMoney', key: 'totalMoney' },
-    { title: '退押金', dataIndex: 'isReback', key: 'isReback', render: (v) => v === 'true' ? '是' : '否' },
-    { title: '售票员', dataIndex: 'saler', key: 'saler' },
+    { title: '订单号', dataIndex: 'orderNum', key: 'orderNum', width: 180 },
+    { title: '日期', dataIndex: 'time', key: 'time', width: 170 },
+    { title: '平台', dataIndex: 'platform', key: 'platform', width: 80 },
+    { title: '支付', dataIndex: 'payWay', key: 'payWay', width: 70 },
+    { title: '押金', dataIndex: 'deposite', key: 'deposite', width: 60 },
+    { title: '成人', dataIndex: 'adultNum', key: 'adultNum', width: 60 },
+    { title: '儿童', dataIndex: 'childNum', key: 'childNum', width: 60 },
+    { title: '总价', dataIndex: 'totalMoney', key: 'totalMoney', width: 70 },
+    { title: '手机号', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 120 },
+    { title: '退押金', dataIndex: 'isReback', key: 'isReback', width: 90, render: (v, record) => (
+      <Tag className="cursor-pointer" color={v === 'true' ? 'green' : 'red'} onClick={() => setRebackRecord(record)}>
+        {v === 'true' ? '已退' : '未退'}
+      </Tag>
+    ) },
+    { title: '售票员', dataIndex: 'saler', key: 'saler', width: 80 },
+    { title: '打印时间', dataIndex: 'printTime', key: 'printTime', width: 160 },
+    { title: '备注', dataIndex: 'remark', key: 'remark', width: 100, render: (v) => v ? <Tooltip title={v}><span className="text-orange-500">{v.slice(0, 6)}...</span></Tooltip> : '-' },
     {
-      title: '操作', key: 'action',
+      title: '操作', key: 'action', width: 60,
       render: (_, record) => (
         <Button danger size="small" onClick={() => {
           if (user.powerId === '2') { setForm(record); setDeleteOpen(true); }
@@ -157,15 +218,16 @@ export default function Orders() {
     },
   ];
 
-  const resetFilters = () => { setFilterPlat('各平台'); setFilterTime(null); setSearchNum(''); };
+  const resetFilters = () => { setFilterPlat('各平台'); setFilterTime(null); setSearchNum(''); setPhoneSuffix(''); load(); };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-gray-800">订单管理</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleNew} className="rounded-lg h-9 bg-gradient-to-r from-blue-500 to-indigo-600 border-none shadow-md shadow-blue-500/20">
-          新建订单
-        </Button>
+        <div className="flex gap-2">
+          <Button icon={<DownloadOutlined />} onClick={() => setExportOpen(true)} className="rounded-lg h-9">导出CSV</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleNew} className="rounded-lg h-9 bg-gradient-to-r from-blue-500 to-indigo-600 border-none shadow-md shadow-blue-500/20">新建订单</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -190,42 +252,24 @@ export default function Orders() {
       </div>
 
       <Card className="rounded-xl border-0 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
           <div className="flex items-center gap-3">
-            <RangePicker
-              format="YYYY-MM-DD"
-              value={filterTime}
-              onChange={(dates) => setFilterTime(dates as [Dayjs, Dayjs] | null)}
-              placeholder={['开始时间', '结束时间']}
-              className="rounded-lg"
-            />
+            <RangePicker format="YYYY-MM-DD" value={filterTime} onChange={(dates) => setFilterTime(dates as [Dayjs, Dayjs] | null)} placeholder={['开始时间', '结束时间']} className="rounded-lg" />
             <Select value={filterPlat} onChange={setFilterPlat} style={{ width: 120 }} className="rounded-lg">
               {PLATFORMS.map((p) => <Select.Option key={p} value={p}>{p}</Select.Option>)}
             </Select>
             <Button onClick={resetFilters} className="rounded-lg">重置</Button>
           </div>
-          <Input.Search placeholder="输入编号查询" onSearch={setSearchNum} enterButton style={{ width: 220 }} className="rounded-lg" />
+          <div className="flex items-center gap-2">
+            <Input.Search placeholder="手机尾号查询" onSearch={handlePhoneSearch} enterButton style={{ width: 180 }} className="rounded-lg" />
+            <Input.Search placeholder="订单号查询" onSearch={setSearchNum} enterButton style={{ width: 180 }} className="rounded-lg" />
+          </div>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={filtered}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          size="middle"
-        />
+        <Table columns={columns} dataSource={filtered} rowKey="_id" loading={loading} pagination={{ pageSize: 10 }} size="middle" scroll={{ x: 1200 }} />
       </Card>
 
-      <Modal
-        title="新建订单"
-        open={modalOpen}
-        onOk={handleSubmit}
-        onCancel={() => setModalOpen(false)}
-        width={460}
-        maskClosable={false}
-        className="rounded-xl"
-      >
+      <Modal title={form._id ? '编辑订单' : '新建订单'} open={modalOpen} onOk={handleSubmit} onCancel={() => setModalOpen(false)} width={460} maskClosable={false}>
         <div className="space-y-4 py-2">
           <div className="flex justify-between items-center">
             <span className="text-gray-500">购票平台</span>
@@ -265,15 +309,21 @@ export default function Orders() {
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500">押金</span><span className="font-medium">100元</span>
+            <span className="text-gray-500">押金</span>
+            <span className="font-medium">{depositPaid ? <span className="text-green-600">0元（已收）</span> : '100元'}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-500">联系方式</span>
             <Input
               value={form.phoneNumber}
               onChange={(e) => { if (!/\D/.test(e.target.value)) updateForm('phoneNumber', e.target.value); }}
+              onBlur={(e) => checkDepositForPhone(e.target.value)}
               style={{ width: 180 }}
             />
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">备注</span>
+            <Input value={form.remark} onChange={(e) => updateForm('remark', e.target.value)} placeholder="错票/跳号备注" style={{ width: 180 }} />
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-gray-100">
             <span className="text-gray-700 font-medium">总价</span>
@@ -282,16 +332,20 @@ export default function Orders() {
         </div>
       </Modal>
 
-      <Modal
-        title="确认删除"
-        open={deleteOpen}
-        onOk={handleDelete}
-        onCancel={() => setDeleteOpen(false)}
-        okText="确认"
-        cancelText="取消"
-        okButtonProps={{ danger: true }}
-      >
+      <Modal title="确认删除" open={deleteOpen} onOk={handleDelete} onCancel={() => setDeleteOpen(false)} okText="确认" cancelText="取消" okButtonProps={{ danger: true }}>
         <p className="text-gray-600">将永久删除这一条订单，此操作不可撤销。</p>
+      </Modal>
+
+      <Modal title="确认退押金" open={!!rebackRecord} onOk={handleToggleReback} onCancel={() => setRebackRecord(null)} okText="确认" cancelText="取消">
+        <p className="text-gray-600">
+          {rebackRecord?.isReback === 'true' ? '确认将押金状态改为"未退"？' : '确认已退还押金？'}
+        </p>
+      </Modal>
+
+      <Modal title="选择导出时间范围" open={exportOpen} onOk={handleExport} onCancel={() => setExportOpen(false)} okText="导出" cancelText="取消">
+        <div className="py-4">
+          <RangePicker format="YYYY-MM-DD" value={exportRange} onChange={(dates) => setExportRange(dates as [Dayjs, Dayjs] | null)} placeholder={['开始时间', '结束时间']} className="w-full" />
+        </div>
       </Modal>
 
       <Printer data={printData} price={price} />

@@ -13,6 +13,7 @@ export default function Login() {
     try {
       const res = await authApi.login(values.username, values.password, values.powerId);
       if (res.data.isLogined) {
+        localStorage.setItem('token', res.data.token);
         navigate('/orders');
       } else {
         message.error('密码错误或无此用户');
