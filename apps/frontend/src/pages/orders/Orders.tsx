@@ -51,7 +51,6 @@ export default function Orders() {
   const [rebackRecord, setRebackRecord] = useState<Order | null>(null);
   const [form, setForm] = useState<Partial<Order>>(defaultOrder());
   const [printData, setPrintData] = useState<Partial<Order> | null>(null);
-  const [depositPaid, setDepositPaid] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportRange, setExportRange] = useState<[Dayjs, Dayjs] | null>(null);
 
@@ -109,35 +108,21 @@ export default function Orders() {
     });
   };
 
-  const checkDepositForPhone = async (phone: string) => {
-    if (phone.length >= 4) {
-      const res = await ordersApi.checkDeposit(phone, dayjs().format('YYYY-MM-DD'));
-      setDepositPaid(res.data);
-      if (res.data) {
-        setForm((prev) => ({ ...prev, deposite: 0, totalMoney: calcTotal({ ...prev, deposite: 0 }) }));
-        message.info('同手机号今日已收押金，本单免押金');
-      }
-    } else {
-      setDepositPaid(false);
-    }
-  };
-
   const handleNew = () => {
     const o = defaultOrder();
     o.saler = saler;
     setForm(o);
-    setDepositPaid(false);
     setModalOpen(true);
   };
 
-  const handleSubmit = async () => {
+  const doSubmit = async (data: Partial<Order>) => {
     try {
-      if (!form._id) {
-        const res = await ordersApi.create({ ...form, saler });
+      if (!data._id) {
+        const res = await ordersApi.create({ ...data, saler });
         setOrders((prev) => [res.data.result, ...prev]);
         setPrintData(res.data.result);
       } else {
-        await ordersApi.update(form);
+        await ordersApi.update(data);
         load();
       }
       setModalOpen(false);
@@ -145,6 +130,10 @@ export default function Orders() {
     } catch {
       message.error('提交失败');
     }
+  };
+
+  const handleSubmit = async () => {
+    doSubmit(form);
   };
 
   const handleDelete = async () => {
@@ -199,11 +188,14 @@ export default function Orders() {
     { title: '儿童', dataIndex: 'childNum', key: 'childNum', width: 60 },
     { title: '总价', dataIndex: 'totalMoney', key: 'totalMoney', width: 70 },
     { title: '手机号', dataIndex: 'phoneNumber', key: 'phoneNumber', width: 120 },
-    { title: '退押金', dataIndex: 'isReback', key: 'isReback', width: 90, render: (v, record) => (
-      <Tag className="cursor-pointer" color={v === 'true' ? 'green' : 'red'} onClick={() => setRebackRecord(record)}>
-        {v === 'true' ? '已退' : '未退'}
-      </Tag>
-    ) },
+    { title: '退押金', dataIndex: 'isReback', key: 'isReback', width: 90, render: (v, record) => {
+      if (record.deposite === 0) return <Tag color="default">无押金</Tag>;
+      return (
+        <Tag className="cursor-pointer" color={v === 'true' ? 'green' : 'red'} onClick={() => setRebackRecord(record)}>
+          {v === 'true' ? '已退' : '未退'}
+        </Tag>
+      );
+    } },
     { title: '售票员', dataIndex: 'saler', key: 'saler', width: 80 },
     { title: '打印时间', dataIndex: 'printTime', key: 'printTime', width: 160 },
     { title: '备注', dataIndex: 'remark', key: 'remark', width: 100, render: (v) => v ? <Tooltip title={v}><span className="text-orange-500">{v.slice(0, 6)}...</span></Tooltip> : '-' },
@@ -217,6 +209,40 @@ export default function Orders() {
       ),
     },
   ];
+
+  useEffect(() => {
+    if (!printData?._id) return;
+    setTimeout(() => {
+      try {
+        const LODOP = (window as any).getLodop?.();
+        if (!LODOP || !LODOP.SET_PRINT_PAGESIZE) {
+          markPrintError(printData._id!);
+          return;
+        }
+        LODOP.SET_PRINT_PAGESIZE(3, "210mm", "15mm", "");
+        const allstyle = `table{font-size:12px}table td{padding:2px 5px;border:1px #000 solid;margin:0}table td:nth-child(2n-1){width:75px}table td:nth-child(2n){width:95px;text-align:right}`;
+        const strFormHtml = `<style>${allstyle}</style><body>${document.getElementById("form1")?.innerHTML || ''}</body>`;
+        LODOP.ADD_PRINT_HTM(10, 40, 1000, 800, strFormHtml);
+        LODOP.SET_PRINT_MODE("CATCH_PRINT_STATUS", true);
+        LODOP.On_Return = function (_: string, value: string) {
+          if (value === "0" || value === "false") {
+            markPrintError(printData._id!);
+          }
+        };
+        LODOP.PRINT();
+      } catch {
+        markPrintError(printData._id!);
+      }
+    }, 300);
+  }, [printData]);
+
+  const markPrintError = async (id: string) => {
+    try {
+      await ordersApi.update({ _id: id, remark: '错票' });
+      setOrders((prev) => prev.map((o) => o._id === id ? { ...o, remark: '错票' } : o));
+      message.warning('打印异常，已自动标记错票备注');
+    } catch { /* ignore */ }
+  };
 
   const resetFilters = () => { setFilterPlat('各平台'); setFilterTime(null); setSearchNum(''); setPhoneSuffix(''); load(); };
 
@@ -310,14 +336,13 @@ export default function Orders() {
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-500">押金</span>
-            <span className="font-medium">{depositPaid ? <span className="text-green-600">0元（已收）</span> : '100元'}</span>
+            <InputNumber min={0} value={form.deposite} onChange={(v) => updateForm('deposite', v || 0)} />
           </div>
           <div className="flex justify-between items-center">
             <span className="text-gray-500">联系方式</span>
             <Input
               value={form.phoneNumber}
               onChange={(e) => { if (!/\D/.test(e.target.value)) updateForm('phoneNumber', e.target.value); }}
-              onBlur={(e) => checkDepositForPhone(e.target.value)}
               style={{ width: 180 }}
             />
           </div>
@@ -327,7 +352,7 @@ export default function Orders() {
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-gray-100">
             <span className="text-gray-700 font-medium">总价</span>
-            <span className="text-xl font-semibold text-blue-600">{form.platform !== '现场' ? form.deposite : form.totalMoney}元</span>
+            <span className="text-xl font-semibold text-blue-600">{form.totalMoney}元</span>
           </div>
         </div>
       </Modal>

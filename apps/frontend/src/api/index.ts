@@ -33,7 +33,6 @@ export const ordersApi = {
   update: (data: Partial<Order>) => api.post('/updateoneOrder', data),
   delete: (id: string) => api.post('/deleteOne', { _id: id }),
   exportCsv: (start: string, end: string) => api.get('/exportOrders', { params: { start, end }, responseType: 'blob' }),
-  checkDeposit: (phone: string, date: string) => api.get<boolean>('/checkDeposit', { params: { phone, date } }),
 };
 
 export const usersApi = {

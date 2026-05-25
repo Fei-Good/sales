@@ -39,7 +39,7 @@ export class OrdersController {
     const data = await this.ordersService.findForExport(req.user, start, end);
     const header = '订单号,日期,平台,支付方式,成人,儿童,总价,押金,退押金,售票员,手机号,备注,打印时间\n';
     const rows = data.map((o: any) =>
-      [o.orderNum, o.time, o.platform, o.payWay, o.adultNum, o.childNum, o.totalMoney, o.deposite, o.isReback === 'true' ? '是' : '否', o.saler, o.phoneNumber || '', o.remark || '', o.printTime || ''].join(',')
+      [o.orderNum, o.time, o.platform, o.payWay, o.adultNum, o.childNum, o.totalMoney, o.deposite, o.isReback === 'true' ? '已退' : (o.deposite === 0 ? '无押金' : '未退'), o.saler, o.phoneNumber || '', o.remark || '', o.printTime || ''].join(',')
     ).join('\n');
     const bom = '﻿';
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -47,9 +47,4 @@ export class OrdersController {
     res.send(bom + header + rows);
   }
 
-  @Get('checkDeposit')
-  @UseGuards(JwtGuard)
-  checkDeposit(@Query('phone') phone: string, @Query('date') date: string) {
-    return this.ordersService.checkDeposit(phone, date);
-  }
 }
