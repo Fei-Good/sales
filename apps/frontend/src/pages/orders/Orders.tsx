@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { Table, Button, Input, Select, DatePicker, Modal, InputNumber, message, Card, Tooltip, Tag } from 'antd';
+import { Table, Button, Input, Select, DatePicker, Modal, InputNumber, message, Card, Tag } from 'antd';
 import { PlusOutlined, TeamOutlined, ManOutlined, SmileOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs, { Dayjs } from 'dayjs';
@@ -49,6 +49,8 @@ export default function Orders() {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [rebackRecord, setRebackRecord] = useState<Order | null>(null);
+  const [remarkRecord, setRemarkRecord] = useState<Order | null>(null);
+  const [remarkValue, setRemarkValue] = useState('');
   const [form, setForm] = useState<Partial<Order>>(defaultOrder());
   const [printData, setPrintData] = useState<Partial<Order> | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
@@ -160,6 +162,18 @@ export default function Orders() {
     }
   };
 
+  const handleSaveRemark = async () => {
+    if (!remarkRecord) return;
+    try {
+      await ordersApi.update({ _id: remarkRecord._id, remark: remarkValue });
+      setOrders((prev) => prev.map((o) => o._id === remarkRecord._id ? { ...o, remark: remarkValue } : o));
+      setRemarkRecord(null);
+      message.success('备注更新成功');
+    } catch {
+      message.error('更新失败');
+    }
+  };
+
   const handleExport = async () => {
     if (!exportRange) { message.warning('请选择导出时间范围'); return; }
     const start = exportRange[0].format('YYYY-MM-DD');
@@ -180,7 +194,7 @@ export default function Orders() {
 
   const columns: ColumnsType<Order> = [
     { title: '订单号', dataIndex: 'orderNum', key: 'orderNum', width: 180 },
-    { title: '日期', dataIndex: 'time', key: 'time', width: 170 },
+    { title: '日期', dataIndex: 'time', key: 'time', width: 150 },
     { title: '平台', dataIndex: 'platform', key: 'platform', width: 80 },
     { title: '支付', dataIndex: 'payWay', key: 'payWay', width: 70 },
     { title: '押金', dataIndex: 'deposite', key: 'deposite', width: 60 },
@@ -197,8 +211,15 @@ export default function Orders() {
       );
     } },
     { title: '售票员', dataIndex: 'saler', key: 'saler', width: 80 },
-    { title: '打印时间', dataIndex: 'printTime', key: 'printTime', width: 160 },
-    { title: '备注', dataIndex: 'remark', key: 'remark', width: 100, render: (v) => v ? <Tooltip title={v}><span className="text-orange-500">{v.slice(0, 6)}...</span></Tooltip> : '-' },
+    { title: '打印时间', dataIndex: 'printTime', key: 'printTime', width: 150 },
+    { title: '备注（点击修改）', dataIndex: 'remark', key: 'remark', width: 170, render: (v, record) => (
+      <span
+        className={v ? "text-orange-500 cursor-pointer" : "cursor-pointer"}
+        onClick={() => { setRemarkRecord(record); setRemarkValue(v || ''); }}
+      >
+        {v ? (v.length > 6 ? v.slice(0, 6) + '...' : v) : '-'}
+      </span>
+    ) },
     {
       title: '操作', key: 'action', width: 60,
       render: (_, record) => (
@@ -346,10 +367,6 @@ export default function Orders() {
               style={{ width: 180 }}
             />
           </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500">备注</span>
-            <Input value={form.remark} onChange={(e) => updateForm('remark', e.target.value)} placeholder="错票/跳号备注" style={{ width: 180 }} />
-          </div>
           <div className="flex justify-between items-center pt-2 border-t border-gray-100">
             <span className="text-gray-700 font-medium">总价</span>
             <span className="text-xl font-semibold text-blue-600">{form.totalMoney}元</span>
@@ -365,6 +382,12 @@ export default function Orders() {
         <p className="text-gray-600">
           {rebackRecord?.isReback === 'true' ? '确认将押金状态改为"未退"？' : '确认已退还押金？'}
         </p>
+      </Modal>
+
+      <Modal title="编辑备注" open={!!remarkRecord} onOk={handleSaveRemark} onCancel={() => setRemarkRecord(null)} okText="保存" cancelText="取消">
+        <div className="py-4">
+          <Input.TextArea value={remarkValue} onChange={(e) => setRemarkValue(e.target.value)} placeholder="请输入备注（如：错票、跳号等）" rows={4} />
+        </div>
       </Modal>
 
       <Modal title="选择导出时间范围" open={exportOpen} onOk={handleExport} onCancel={() => setExportOpen(false)} okText="导出" cancelText="取消">

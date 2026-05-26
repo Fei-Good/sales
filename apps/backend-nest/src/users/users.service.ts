@@ -12,7 +12,15 @@ export class UsersService {
   }
 
   async findAll() {
-    return this.col.find().toArray();
+    const users = await this.col.find().toArray();
+    const orderCol = this.db.collection('order');
+    const result = await Promise.all(
+      users.map(async (user) => {
+        const orderCount = await orderCol.countDocuments({ saler: user.username });
+        return { ...user, orders: orderCount };
+      })
+    );
+    return result;
   }
 
   async findByUsername(username: string) {

@@ -19,5 +19,14 @@ export class CreateOrderDto {
 
 export class UpdateOrderDto {
   @IsString() _id: string;
-  [key: string]: any;
+  @IsOptional() @IsString() remark?: string;
+  @IsOptional() @IsString() isReback?: string;
+  @IsOptional() @IsString() platform?: string;
+  @IsOptional() @IsString() payWay?: string;
+  @IsOptional() @IsNumber() adultNum?: number;
+  @IsOptional() @IsNumber() childNum?: number;
+  @IsOptional() @IsNumber() accidentNum?: number;
+  @IsOptional() @IsNumber() deposite?: number;
+  @IsOptional() @IsNumber() totalMoney?: number;
+  @IsOptional() @IsString() phoneNumber?: string;
 }
