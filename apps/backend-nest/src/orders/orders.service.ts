@@ -24,14 +24,15 @@ export class OrdersService {
     if (!userDoc) throw new NotFoundException('User not found');
 
     const orderNum = `${dto.time}-${username}-${userDoc.orders}`;
-    const printTime = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    const printTime = dto.time;
     const doc = { ...dto, saler: username, orderNum, printTime };
     const result = await this.db.collection('order').insertOne(doc);
     return { result: { ...doc, _id: result.insertedId } };
   }
 
   async update(id: string, data: any) {
-    await this.db.collection('order').updateOne({ _id: new ObjectId(id) }, { $set: data });
+    const result = await this.db.collection('order').updateOne({ _id: new ObjectId(id) }, { $set: data });
+    return { matched: result.matchedCount, modified: result.modifiedCount };
   }
 
   async delete(id: string) {
