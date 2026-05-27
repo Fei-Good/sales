@@ -9,7 +9,7 @@ export default function Printer({ data, price }: Props) {
   if (!data) return null;
   const timeStr = data.printTime || `${(data.time || '').replace(/-/g, '/')}`;
   const personAll = (data.adultNum || 0) + (data.childNum || 0);
-  const totalLow = (data.adultNum || 0) * price.adultPrice + (data.childNum || 0) * price.childPrice + (data.accidentNum || 0) * 7;
+  const totalLow = (data.adultNum || 0) * price.adultPrice + (data.childNum || 0) * price.childPrice;
 
   return (
     <form id="form1" style={{ display: 'none' }}>
@@ -49,9 +49,7 @@ export default function Printer({ data, price }: Props) {
           </tr>
           <tr>
             <td>合计大写：</td>
-            <td colSpan={2}>{data.platform !== '现场' ? data.deposite : data.totalMoney}</td>
-            <td>人身意外保险</td>
-            <td colSpan={2}>{data.accidentNum}</td>
+            <td colSpan={5}>{data.platform !== '现场' ? data.deposite : data.totalMoney}</td>
           </tr>
           <tr>
             <td>联系方式：</td>

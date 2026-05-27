@@ -13,9 +13,9 @@ dayjs.extend(isBetween);
 
 const { RangePicker } = DatePicker;
 
-const PLATFORMS = ['各平台', '现场', '美团', '红苹果', '驴妈妈', '云客赞', '其他'];
+const PLATFORMS = ['各平台', '现场', '美团', '抖音', '携程', '其他'];
 const PAY_WAYS = ['现金', '微信', '支付宝'];
-const PLATFORM_OPTIONS = ['现场', '美团', '红苹果', '驴妈妈', '云客赞', '其他'];
+const PLATFORM_OPTIONS = ['现场', '美团', '抖音', '携程', '其他'];
 
 const defaultOrder = (): Partial<Order> => ({
   _id: '',
@@ -86,7 +86,7 @@ export default function Orders() {
       }
       if (filterPlat !== '各平台') {
         if (filterPlat === '其他') {
-          if (['现场', '美团', '红苹果', '驴妈妈', '云客赞'].includes(item.platform)) return false;
+          if (['现场', '美团', '抖音', '携程'].includes(item.platform)) return false;
         } else if (item.platform !== filterPlat) return false;
       }
       if (searchNum && item.orderNum !== searchNum) return false;
@@ -100,7 +100,7 @@ export default function Orders() {
   const totalChild = useMemo(() => filtered.reduce((s, o) => s + (o.childNum || 0), 0), [filtered]);
 
   const calcTotal = (f: Partial<Order>) =>
-    (f.adultNum || 0) * price.adultPrice + (f.childNum || 0) * price.childPrice + (f.accidentNum || 0) * 7 + (f.deposite || 0);
+    (f.adultNum || 0) * price.adultPrice + (f.childNum || 0) * price.childPrice + (f.deposite || 0);
 
   const updateForm = (key: string, value: unknown) => {
     setForm((prev) => {
@@ -167,6 +167,7 @@ export default function Orders() {
     try {
       await ordersApi.update({ _id: remarkRecord._id, remark: remarkValue });
       setOrders((prev) => prev.map((o) => o._id === remarkRecord._id ? { ...o, remark: remarkValue } : o));
+      setForm((prev) => (prev._id === remarkRecord._id ? { ...prev, remark: remarkValue } : prev));
       setRemarkRecord(null);
       message.success('备注更新成功');
     } catch {
@@ -349,13 +350,6 @@ export default function Orders() {
             </div>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-500">人身意外</span>
-            <div className="flex items-center gap-2">
-              <InputNumber min={0} value={form.accidentNum} onChange={(v) => updateForm('accidentNum', v || 0)} />
-              <span className="text-xs text-gray-400">7元/人</span>
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
             <span className="text-gray-500">押金</span>
             <InputNumber min={0} value={form.deposite} onChange={(v) => updateForm('deposite', v || 0)} />
           </div>
@@ -364,6 +358,16 @@ export default function Orders() {
             <Input
               value={form.phoneNumber}
               onChange={(e) => { if (!/\D/.test(e.target.value)) updateForm('phoneNumber', e.target.value); }}
+              style={{ width: 180 }}
+            />
+          </div>
+          <div className="flex justify-between items-start">
+            <span className="text-gray-500">备注</span>
+            <Input.TextArea
+              value={form.remark || ''}
+              onChange={(e) => updateForm('remark', e.target.value)}
+              placeholder="请输入备注（默认空）"
+              rows={3}
               style={{ width: 180 }}
             />
           </div>
