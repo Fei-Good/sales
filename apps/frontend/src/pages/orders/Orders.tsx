@@ -13,15 +13,15 @@ dayjs.extend(isBetween);
 
 const { RangePicker } = DatePicker;
 
-const PLATFORMS = ['各平台', '现场', '美团', '抖音', '携程', '其他'];
-const PAY_WAYS = ['现金', '微信', '支付宝'];
-const PLATFORM_OPTIONS = ['现场', '美团', '抖音', '携程', '其他'];
+const PLATFORMS = ['各平台', '抖音', '美团', '现场', '携程', '其他'];
+const PAY_WAYS = ['微信', '支付宝', '现金'];
+const PLATFORM_OPTIONS = ['抖音', '美团', '现场', '携程', '其他'];
 
 const defaultOrder = (): Partial<Order> => ({
   _id: '',
-  platform: '现场',
-  payWay: '现金',
-  depositePayWay: '现金',
+  platform: '抖音',
+  payWay: '微信',
+  depositePayWay: '微信',
   adultNum: 0,
   childNum: 0,
   accidentNum: 0,
@@ -86,7 +86,7 @@ export default function Orders() {
       }
       if (filterPlat !== '各平台') {
         if (filterPlat === '其他') {
-          if (['现场', '美团', '抖音', '携程'].includes(item.platform)) return false;
+          if (['抖音', '美团', '现场', '携程'].includes(item.platform)) return false;
         } else if (item.platform !== filterPlat) return false;
       }
       if (searchNum && item.orderNum !== searchNum) return false;
@@ -105,6 +105,7 @@ export default function Orders() {
   const updateForm = (key: string, value: unknown) => {
     setForm((prev) => {
       const next = { ...prev, [key]: value };
+      if (key === 'payWay') next.depositePayWay = value as string;
       next.totalMoney = calcTotal(next);
       return next;
     });
