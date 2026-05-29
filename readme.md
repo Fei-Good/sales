@@ -1,17 +1,42 @@
 
-项目调试运行 npm run start
+# 漂流售票系统（Monorepo）
 
-项目启动运行 node app.js
+## 安装依赖
 
-项目启动后必须先添加超级管理员，暂时只能手动在 MongoDB 控制台添加。请将 `<YOUR_STRONG_PASSWORD>` 替换为强密码，勿使用示例中的占位符作为真实密码。
+```bash
+npm install
+```
+
+## 本地开发
+
+```bash
+# 前后端同时启动
+npm run dev
+
+# 仅启动前端（Vite）
+npm run dev:front
+
+# 仅启动后端（NestJS）
+npm run dev:nest
+```
+
+## 构建与检查
+
+```bash
+npm run build
+npm run lint
+```
+
+## 初始化数据库（首次）
+
+项目启动后需先添加超级管理员（当前通过 MongoDB 控制台手动添加）。
+请将 `<YOUR_STRONG_PASSWORD>` 替换为强密码。
 
 ```js
-
 db.createCollection('order')
 db.createCollection('user')
 db.createCollection('price')
 db.createCollection('store')
-
 
 db.user.insert({
   orders: 0,
@@ -19,8 +44,8 @@ db.user.insert({
   powerId: "2",
   username: "supermanage"
 })
-db.price.insert({ adultPrice: 80, childPrice: 40, plupPrice: 50, clothPrice: 30 })
 
+db.price.insert({ adultPrice: 80, childPrice: 40, plupPrice: 50, clothPrice: 30 })
 ```
 
 ## 环境变量
@@ -30,16 +55,6 @@ db.price.insert({ adultPrice: 80, childPrice: 40, plupPrice: 50, clothPrice: 30 
 - `MONGODB_URI`：MongoDB 连接串（本地默认 `mongodb://127.0.0.1:27017/sales`）
 - `SESSION_SECRET`：Session 签名密钥（生产环境必须设置）
 
-## 查询磁盘使用量
-find / -size +100M -exec ls -lh {} \;
+## 说明
 
-## 查询历史使用命令
-history
-
-## 本地调试
-
-通过环境变量 `MONGODB_URI` 连接远程或本地数据库，勿将连接串写入 `config/default.js` 并提交到仓库。
-
-## 安装数据库
-参考
-https://juejin.cn/post/7176963017127493689?searchId=20250123180240C237B6367C8C3B4EB2AB
+通过环境变量 `MONGODB_URI` 连接远程或本地数据库，不要将连接串写入代码并提交到仓库。
